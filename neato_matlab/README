@@ -1,0 +1,13 @@
+Neato Robot interface for Carnegie Mellon class:
+Mobile Robot Porgramming Laboratory
+16-362
+
+Uses web-matlab-bridge:
+https://github.com/BrendanAndrade/web-matlab-bridge
+
+which includes:
+JSONlab (BSD license)
+and 
+Java-WebSocket (BSD License)
+
+This software is also under BSD License, found in LICENSE_BSD.txt
