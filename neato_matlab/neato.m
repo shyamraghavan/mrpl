@@ -343,6 +343,7 @@ classdef neato < handle
         function verifyNetworkLinux(obj)
             % TODO: debug
             [status,response] = system('iwgetid -r');
+            response = strtrim(response);
             if isempty(response)
                 error('NOT CONNECTED TO A NETWORK.');
             end

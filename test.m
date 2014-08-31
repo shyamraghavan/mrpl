@@ -1,4 +1,4 @@
-robot = neato('sim');
+robot = neato('kilo');
 leftEncoder = 1;
 distance = 0.2;
 
@@ -10,7 +10,7 @@ dataIndex = 1;
 TSTART = tic;
 
 leftEncoderStart = leftEncoder;
-v = 0.05;
+v = 0.02;
 
 while leftEncoder - leftEncoderStart < distance
     TLOOPBEGIN = tic;
@@ -39,5 +39,3 @@ end
 
 robot.sendVelocity(0,0)
 plot(timeArray, dataArray)
-
-robot.shutdown()
