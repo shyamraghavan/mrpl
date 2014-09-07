@@ -1,5 +1,5 @@
-%% OnNewLaserData
 function onNewLaserData(~, laser)
+% Updates the laser graph whenever a new batch of laser data arrives.
 
 laserPlotPol  = get(findobj('Tag','laserFigPol'),'Children');
 laserPlotCart = get(findobj('Tag','laserFigCart'),'Children');
