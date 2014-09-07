@@ -19,9 +19,9 @@ r = randi(5,1,360);
 rho = 1:360;
 
 % polar plot config and plot call
-plot(laserFigPol,r.*cos(rho),r.*sin(rho),'+r',0.2.*cos(rho),0.2.*sin(rho),'b');
+plot(laserFigPol,r.*cos(rho),r.*sin(rho),'.r',0.2.*cos(rho),0.2.*sin(rho),'g',2.2.*cos(rho),2.2.*sin(rho), '*b');
 title(laserFigPol,'Polar representation of Laser data');
-axis(laserFigPol,[-6 6 -6 6]);
+axis(laserFigPol,[-3 3 -3 3]);
 set(laserFigPol,'Box','on',...
                 'XGrid','on',...
                 'YGrid','on',...
