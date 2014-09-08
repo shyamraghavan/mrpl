@@ -1,11 +1,14 @@
+close all;
+clear all;
+clc;
 %% Robot Setup
-rob = neato('kilo');
+rob = neato('giga');
 pause(1);
 
 %% Lab 2 - Smart Luggage
 % Start laser rangefinder
 rob.startLaser();
-pause(1);
+pause(2);
 disp('Robot''s laser is activated.');
 
 % Setup laser plot update lisener
@@ -18,6 +21,7 @@ cleanedLaserRanges = rangeDataFilter(rob.laser.data.ranges);
 % Detect nearest object within a specified sector
 [i,r] = nearestObject(inSector(cleanedLaserRanges, -45, 45));
 
+disp('Launching Error Plot.');5
 % Set up error plot
 global error;
 error = [];
@@ -26,7 +30,8 @@ errorPlot = subplot(1,1,1);
 plot(errorPlot,1:10,1:10,'+m');
 title(errorPlot,'Distance Error (m)');
 set(errorPlot,'Tag','errorPlot',...
-              'XLim',[-1 1]);
+              'YMinorGrid', 'on',...
+              'YLim',[-1 1]);
 pause(3);
 
 % Velocity and turn speed variables
@@ -35,12 +40,13 @@ differential = 0.08;
 
 while true
     
-    plotDistanceError(r,0.65); % plot new error distance
-    
+     plotDistanceError(r,0.65); % plot new error distance
+     
     % Determine action based on range and bearing.
     if  i == -1 || r > 2
         rob.sendVelocity(0,0);
     elseif r > 0.70
+%         plotDistanceError(r,0.65); % plot new error distance
         if i < 45 && i > 10
             rob.sendVelocity(v - differential, v + differential);
         elseif i > 315 && i < 350
@@ -49,8 +55,10 @@ while true
             rob.sendVelocity(v,v);
         end
     elseif r < 0.60
+%         plotDistanceError(r,0.65); % plot new error distance
         rob.sendVelocity(-v,-v);
     else
+%         plotDistanceError(r,0.65); % plot new error distance
         rob.sendVelocity(0,0);
     end
     
@@ -60,3 +68,7 @@ while true
     
     pause(0.05);
 end
+
+%%
+rob.stopLaser();
+rob.close();
