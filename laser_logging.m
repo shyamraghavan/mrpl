@@ -20,25 +20,25 @@ disp('Simulator launched.');
 rob.startLaser();
 pause(0.2);
 disp('Robot''s laser is activated.');
-
-global logIndex laserLoggingListener;
-logIndex = 0;
-
-delete('laserData.csv');
-laserLoggingListener = event.listener(rob.laser,'OnMessageReceived',@logLaserData);
-
-rob.sendVelocity(0.1,0.2);
-pause(2);
-rob.sendVelocity(0.3,0.2);
-pause(2);
-rob.sendVelocity(0.3,0.2);
-pause(2);
-rob.sendVelocity(0.3,0.2);
-pause(2);
-rob.sendVelocity(0.1,0.2);
-pause(4);
-
-rob.shutdown();
-disp('Simulator closed.');
-close all;
-clear all;
+% 
+% global logIndex laserLoggingListener;
+% logIndex = 0;
+% 
+% delete('laserData.csv');
+% laserLoggingListener = event.listener(rob.laser,'OnMessageReceived',@logLaserData);
+% 
+% rob.sendVelocity(0.1,0.2);s
+% pause(2);
+% rob.sendVelocity(0.3,0.2);
+% pause(2);
+% rob.sendVelocity(0.3,0.2);
+% pause(2);
+% rob.sendVelocity(0.3,0.2);
+% pause(2);
+% rob.sendVelocity(0.1,0.2);
+% pause(4);
+% 
+% rob.shutdown();
+% disp('Simulator closed.');
+% close all;
+% clear all;

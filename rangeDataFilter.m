@@ -12,5 +12,7 @@ confidence = confidence .*(rawData < MAXRANGE);
 endData = temp .* (temp>MINRANGE);
 confidence = confidence .*(temp>MINRANGE);
 
+endData(~endData(:)) = 10;
+
 end
 
