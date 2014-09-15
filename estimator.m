@@ -1,5 +1,8 @@
-function estimator(~, data,obj)
-
+function estimator(obj, data)
+    
+    disp('Obj: ');
+    disp(obj)
+    disp('End Obj');
     leftPast = obj.encoders.leftPast;
     rightPast=obj.encoders.rightPast;
     timePastSec = obj.encoders.timePastSec;

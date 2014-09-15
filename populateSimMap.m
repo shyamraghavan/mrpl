@@ -14,7 +14,7 @@ ob1 = lineObject();
 ob1.lines = [0.8 0.8; 1 0.8; 1 1; 0.8 1; 0.8 0.8];
 
 map = lineMap([walls ob1]);
-obj.rob.genMap(map.objects)
+obj.neatoRobot.genMap(map.objects)
 disp('Populated robot''s map.');
     
 end
