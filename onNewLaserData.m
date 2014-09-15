@@ -7,6 +7,7 @@ laserPlotCart = get(findobj('Tag','laserFigCart'),'Children');
 cleanedLaserRanges = rangeDataFilter(laser.data.ranges);
 [i,r] = nearestObject(inSector(cleanedLaserRanges, -45, 45));
 
+
 if i ~= 1
     [x,y,~] = irToXy(i + 90,r);
     set(laserPlotPol(1),...
@@ -21,6 +22,7 @@ set(laserPlotPol(3),...
 	'YData',cleanedLaserRanges.*sin((90:449).*(pi/180)));
 
 set(laserPlotCart,...
-	'YData',laser.data.ranges);
+    'XData',1:360,...
+	'YData',[fliplr(laser.data.ranges(1:180)),fliplr(laser.data.ranges(181:360))]);
 
 end
