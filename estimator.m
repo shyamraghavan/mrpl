@@ -1,8 +1,8 @@
 function estimator(obj, data)
     
-    disp('Obj: ');
-    disp(obj)
-    disp('End Obj');
+%     disp('Showing obj')
+%     disp(obj)
+%     disp('obj showed')
     leftPast = obj.encoders.leftPast;
     rightPast=obj.encoders.rightPast;
     timePastSec = obj.encoders.timePastSec;

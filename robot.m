@@ -3,7 +3,7 @@ classdef robot < handle
      properties
         SIM_STR = 'sim';
         useSim = false;
-        rob;
+        neatoRobot;
         robotActive = false;
         robotMapped = false;
         deadReckoning = struct('xPos',0,...
@@ -24,13 +24,13 @@ classdef robot < handle
 
     methods 
 
-        function obj = robot(robName,varargin)
+        function obj = robot(robotName,varargin)
             % Init neato robot.
-            obj.rob = neato(robName);
+            obj.neatoRobot = neato(robotName);
             obj.robotActive = true;
             
             % Check if rob is a robot or a simulator
-            if strcmp(robName,obj.SIM_STR)
+            if strcmp(robotName,obj.SIM_STR)
                 disp('Created Simulator.');
                 obj.useSim = true;
             else
@@ -38,10 +38,8 @@ classdef robot < handle
                 obj.useSim = false;
             end
             
-            % this lines fails because it doesnt get that im trying to
-            % shove obj into the @estimator function.
-            obj.estimator = event.listener(obj.rob.laser,...
-                 'OnMessageReceived',{@estimator,obj});
+            obj.estimator = event.listener(obj.neatoRobot.laser,...
+                 'OnMessageReceived',@estimator);
             
             
             % Evaluate optional arguments passed to the robot.
@@ -102,25 +100,25 @@ classdef robot < handle
                         populateSimMap(obj,obj.mapNumber);
                     end
                     
-                    obj.rob.startLaser()
+                    obj.neatoRobot.startLaser()
                     pause(0.5)              
                 else
-                    obj.rob.startLaser()
+                    obj.neatoRobot.startLaser()
                     pause(4);
                 end
                 
                 disp('LIDAR operational.');
                 
                 run('laserFigConfig.m');
-                obj.laserFigUpdateListener = event.listener(obj.rob.laser,...
+                obj.laserFigUpdateListener = event.listener(obj.neatoRobot.laser,...
                  'OnMessageReceived',@onNewLaserData);
             else
                 if obj.laserFigUpdateListener ~= -1
                     delete(obj.laserFigUpdateListener);
                 end
                   
-                if obj.rob.laser.isvalid()
-                    obj.rob.stopLaser()
+                if obj.neatoRobot.laser.isvalid()
+                    obj.neatoRobot.stopLaser()
                 end
                 
                 close(findobj('Tag','laserFig'));
@@ -131,7 +129,7 @@ classdef robot < handle
         function setLaserLogging(obj,value)
             if value
                 disp('Data logging started');
-                obj.laserLoggingListener = event.listener(obj.rob.laser,...
+                obj.laserLoggingListener = event.listener(obj.neatoRobot.laser,...
                     'OnMessageReceived',@logLaserData);
             else
                 if obj.laserLoggingListener ~= -1
@@ -144,7 +142,7 @@ classdef robot < handle
         function velocityControl(obj, v, omega)
             vr = v + obj.wheelbase / 2 * omega;
             vl = v - obj.wheelbase / 2 * omega;
-            obj.rob.sendVelocity(vr, vl);
+            obj.neatoRobot.sendVelocity(vr, vl);
         end
         
         function goToXY(obj, deltaX, deltaY, deltatheta, velocity)
@@ -172,10 +170,10 @@ classdef robot < handle
             
             % Close robots, shutdown simulators
             if obj.useSim
-                obj.rob.shutdown();
+                obj.neatoRobot.shutdown();
                 disp('Simulator shut down.');
             else
-                obj.rob.close()
+                obj.neatoRobot.close()
                 disp('Robot Connection Closed.');
             end
             obj.robotActive = false;
