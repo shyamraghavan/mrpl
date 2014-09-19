@@ -67,7 +67,6 @@ classdef robot < handle
 %             obj.estimator = event.listener(obj.neatoRobot.laser,...
 %                  'OnMessageReceived',@(src,evt) estimator(src,evt,obj)); 
 
-            
              obj.encoderListener = event.listener(obj.neatoRobot.encoders,...
                  'OnMessageReceived',@(src,evt) encoderListener(src,evt,obj));
             % Evaluate optional arguments passed to the robot.
@@ -192,7 +191,6 @@ classdef robot < handle
         end
         
         function close(obj)
-            obj.neatoRobot.sendVelocity(0,0);
             obj.setLaserFig(false);
             obj.setLaserLogging(false);
             

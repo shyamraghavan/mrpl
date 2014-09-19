@@ -2,11 +2,13 @@ close all;
 clear all;
 clc;
 %% Robot Setup
-rob = robot('sim');
+rob = robot('sim', 'Laser');
 
+pause(5);
 
-
-
+while true
+    rob.neatoRobot.sendVelocity(0.1,0.1);
+end
 
 
 
@@ -75,4 +77,4 @@ while rob.robotActive
 end
 end
 %%
-rob.close
+% rob.close

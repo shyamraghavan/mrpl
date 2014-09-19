@@ -21,7 +21,8 @@ function encoderListener(src,evt,obj)
 %     disp(obj.leftV)
 %     disp('RightV')
 %     disp(obj.rightV)
-
+    disp('gth');
+    disp(src);
     obj.omega = (obj.rightV - obj.leftV) / 2;
     
     obj.prevTimeStamp = obj.timeStamp;
