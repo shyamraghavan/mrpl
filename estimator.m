@@ -1,8 +1,7 @@
-function estimator(src,obj, data)
-    
-%     disp('Showing obj')
-%     disp(obj)
-%     disp('obj showed')
+function estimator(~, data)
+    global robot
+    obj = robot;
+
     leftPast = obj.encoders.leftPast;
     rightPast=obj.encoders.rightPast;
     timePastSec = obj.encoders.timePastSec;
@@ -33,4 +32,6 @@ function estimator(src,obj, data)
     obj.encoders.rightPast = rightCurrent ;
     obj.encoders.timePastSec = timeCurrentSec;
     obj.encoders.timePastNSec =  timeCurrentNSec;
+    
+
 end
