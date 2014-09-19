@@ -18,8 +18,33 @@ classdef robot < handle
         laserFigUpdateListener = -1;
         laserLoggingListener = -1;
         estimator = -1;
-        
+        encoderListener = -1;
         wheelbase = 0.2350;
+        
+        % Previous Timestamp
+        prevTimeStamp = -1;
+        % Current Timestamp
+        timeStamp = -1;
+        % Delta T
+        dt = -1
+        leftWheelPos = -1;
+        prevLeftWheelPos = -1;
+        rightWheelPos = -1;
+        prevRightWheelPos = -1;
+        % Change in left wheel position.
+        leftdS = 0;
+        % Change in right wheel position.
+        rightdS = 0;
+        leftV = 0;
+        rightV = 0;
+        % Angle of robots movement
+        posePlot;
+        xPositions = zeros(1,1000);
+        yPositions = zeros(1,1000);
+        loopIndex = 1;
+        omega = 0;
+        theta = 0;
+        v = 0;
      end
 
     methods 
@@ -38,10 +63,13 @@ classdef robot < handle
                 obj.useSim = false;
             end
             
+            
             obj.estimator = event.listener(obj.neatoRobot.laser,...
-                 'OnMessageReceived',@estimator);
+                 'OnMessageReceived',@(src,evt) estimator(src,evt,obj)); 
+
             
-            
+             obj.encoderListener = event.listener(obj.neatoRobot.encoders,...
+                 'OnMessageReceived',@(src,evt) encoderListener(src,evt,obj));
             % Evaluate optional arguments passed to the robot.
             skip = false;
             index = -1;
@@ -164,7 +192,7 @@ classdef robot < handle
         end
         
         function close(obj)
-           
+            obj.neatoRobot.sendVelocity(0,0);
             obj.setLaserFig(false);
             obj.setLaserLogging(false);
             
@@ -184,5 +212,5 @@ classdef robot < handle
                 close(obj);
             end
         end
-    end    
+    end
 end
