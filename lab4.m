@@ -2,26 +2,31 @@ close all;
 clear all;
 clc;
 %% Robot Setup
-rob = neato('giga');
-pause(1);
+rob = robot('sim');
 
-%% Lab 2 - Smart Luggage
-% Start laser rangefinder
-rob.startLaser();
-pause(2);
-disp('Robot''s laser is activated.');
 
+
+
+
+
+
+
+
+
+
+
+if 0
 % Setup laser plot update lisener
 run('laserFigConfig.m');
-laserFigUpdateListener = event.listener(rob.laser,'OnMessageReceived',@onNewLaserData);
+laserFigUpdateListener = event.listener(rob.neatoRobot.laser,'OnMessageReceived',@onNewLaserData);
 
 % Filter laser data
-cleanedLaserRanges = rangeDataFilter(rob.laser.data.ranges);
+cleanedLaserRanges = rangeDataFilter(rob.neatoRobot.laser.data.ranges);
 
 % Detect nearest object within a specified sector
 [i,r] = nearestObject(inSector(cleanedLaserRanges, -45, 45));
 
-disp('Launching Error Plot.');5
+disp('Launching Error Plot.');
 % Set up error plot
 global error;
 error = [];
@@ -38,37 +43,36 @@ pause(3);
 v = 0.15;
 differential = 0.08;
 
-while true
+while rob.robotActive
     
      plotDistanceError(r,0.65); % plot new error distance
      
     % Determine action based on range and bearing.
     if  i == -1 || r > 2
-        rob.sendVelocity(0,0);
+        rob.neatoRobot.sendVelocity(0,0);
     elseif r > 0.70
 %         plotDistanceError(r,0.65); % plot new error distance
         if i < 45 && i > 10
-            rob.sendVelocity(v - differential, v + differential);
+            rob.neatoRobot.sendVelocity(v - differential, v + differential);
         elseif i > 315 && i < 350
-            rob.sendVelocity(v + differential, v - differential);
+            rob.neatoRobot.sendVelocity(v + differential, v - differential);
         else
-            rob.sendVelocity(v,v);
+            rob.neatoRobot.sendVelocity(v,v);
         end
     elseif r < 0.60
 %         plotDistanceError(r,0.65); % plot new error distance
-        rob.sendVelocity(-v,-v);
+        rob.neatoRobot.sendVelocity(-v,-v);
     else
 %         plotDistanceError(r,0.65); % plot new error distance
-        rob.sendVelocity(0,0);
+        rob.neatoRobot.sendVelocity(0,0);
     end
     
     % Update bearing and range to target.
-    cleanedLaserRanges = rangeDataFilter(rob.laser.data.ranges);
+    cleanedLaserRanges = rangeDataFilter(rob.neatoRobot.laser.data.ranges);
     [i,r] = nearestObject(inSector(cleanedLaserRanges, -45, 45));
     
     pause(0.05);
 end
-
+end
 %%
-rob.stopLaser();
-rob.close();
+rob.close

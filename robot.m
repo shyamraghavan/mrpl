@@ -64,8 +64,8 @@ classdef robot < handle
             end
             
             
-            obj.estimator = event.listener(obj.neatoRobot.laser,...
-                 'OnMessageReceived',@(src,evt) estimator(src,evt,obj)); 
+%             obj.estimator = event.listener(obj.neatoRobot.laser,...
+%                  'OnMessageReceived',@(src,evt) estimator(src,evt,obj)); 
 
             
              obj.encoderListener = event.listener(obj.neatoRobot.encoders,...
