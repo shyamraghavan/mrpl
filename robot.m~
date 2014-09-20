@@ -14,13 +14,7 @@ classdef robot < handle
 %                           'rightPast',-1,...
 %                           'timePastSec',-1,...
 %                           'timePastNSec',-1);                   
-        % Values used by onNewEncoderData.m
         encoders = -1;
-        velocity = -1;
-        omega = -1;
-        prevTime = -1;
-        
-        
         mapNumber = 0;
         laserFigUpdateListener = -1;
         laserLoggingListener = -1;
@@ -58,6 +52,7 @@ classdef robot < handle
             
             obj.encListnr = event.listener(obj.rob.encoders,...
                  'OnMessageReceived',@(src,evt) onNewEncoderData(src,evt,obj));
+            obj.laserListnr = event.listener(
             % Evaluate optional arguments passed to the robot.
             skip = false;
             index = -1;

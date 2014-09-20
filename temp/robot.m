@@ -1,54 +1,61 @@
 classdef robot < handle
+
      properties
-        
         SIM_STR = 'sim';
         useSim = false;
-        rob;
+        neatoRobot;
         robotActive = false;
-        
+        robotMapped = false;
         deadReckoning = struct('xPos',0,...
                                'yPos',0,...
                                'thPos',0)
         lidarData = zeros(1,360);
-%         encoders = struct('leftPast',-1,...
-%                           'rightPast',-1,...
-%                           'timePastSec',-1,...
-%                           'timePastNSec',-1);                   
-        % Values used by onNewEncoderData.m
-        encoders = -1;
-        velocity = -1;
-        omega = -1;
-        prevTime = -1;
-        
-        
+        encoders = struct('leftPast',-1,...
+                          'rightPast',-1,...
+                          'timePastSec',-1,...
+                          'timePastNSec',-1);                   
         mapNumber = 0;
         laserFigUpdateListener = -1;
         laserLoggingListener = -1;
         estimator = -1;
+        encoderListener = -1;
         wheelbase = 0.2350;
         
-        % The Encoder Listener
-        encListnr = -1;
-        % List of object handles for onNewEncoderData to use.
-        % onNewEncoderData will notify(Hobj,'EventName',data)
-        % Sending the new encoder data to every 
-        encoderUpdateList = [ ];
-        laserUpdateList = [ ];
+        % Previous Timestamp
+        prevTimeStamp = -1;
+        % Current Timestamp
+        timeStamp = -1;
+        % Delta T
+        dt = -1
+        leftWheelPos = -1;
+        prevLeftWheelPos = -1;
+        rightWheelPos = -1;
+        prevRightWheelPos = -1;
+        % Change in left wheel position.
+        leftdS = 0;
+        % Change in right wheel position.
+        rightdS = 0;
+        leftV = 0;
+        rightV = 0;
+        % Angle of robots movement
+        posePlot;
+        xPositions = zeros(1,1000);
+        yPositions = zeros(1,1000);
+        loopIndex = 1;
+        omega = 0;
+        theta = 0;
+        v = 0;
      end
-     
+
     methods 
 
-        function obj = robot(robName,varargin)  
-            % global handle to the active robot.
-            global robot; 
-            robot = obj;
-            
+        function obj = robot(robotName,varargin)
             % Init neato robot.
-            obj.rob = neato(robName);
+            obj.neatoRobot = neato(robotName);
             obj.robotActive = true;
             
             % Check if rob is a robot or a simulator
-            if strcmp(robName,obj.SIM_STR)
+            if strcmp(robotName,obj.SIM_STR)
                 disp('Created Simulator.');
                 obj.useSim = true;
             else
@@ -56,8 +63,13 @@ classdef robot < handle
                 obj.useSim = false;
             end
             
-            obj.encListnr = event.listener(obj.rob.encoders,...
-                 'OnMessageReceived',@(src,evt) onNewEncoderData(src,evt,obj));
+            
+%             obj.estimator = event.listener(obj.neatoRobot.laser,...
+%                  'OnMessageReceived',@(src,evt) estimator(src,evt,obj)); 
+
+            
+             obj.encoderListener = event.listener(obj.neatoRobot.encoders,...
+                 'OnMessageReceived',@(src,evt) encoderListener(src,evt,obj));
             % Evaluate optional arguments passed to the robot.
             skip = false;
             index = -1;
@@ -108,36 +120,33 @@ classdef robot < handle
         end
         
         function setLaserFig(obj,value)
-            persistent mapped;
             if value
                 disp('LIDAR started.');
                 
                 if obj.useSim
-                    if isempty(mapped);
+                    if ~obj.robotMapped
                         populateSimMap(obj,obj.mapNumber);
-                        mapped = 1;
                     end
                     
-                    obj.rob.startLaser()
+                    obj.neatoRobot.startLaser()
                     pause(0.5)              
                 else
-                    obj.rob.startLaser()
+                    obj.neatoRobot.startLaser()
                     pause(4);
                 end
                 
                 disp('LIDAR operational.');
                 
                 run('laserFigConfig.m');
-%                 obj.laserFigUpdateListener = event.listener(obj.rob.laser,...
-%                  'OnMessageReceived',@onNewLaserData);
-                obj.laserFigUpdateListener = event.listener(obj.rob.laser,'OnMessageReceived',@(src,evt) onNewLaserData(src,evt,obj));
+                obj.laserFigUpdateListener = event.listener(obj.neatoRobot.laser,...
+                 'OnMessageReceived',@onNewLaserData);
             else
                 if obj.laserFigUpdateListener ~= -1
                     delete(obj.laserFigUpdateListener);
                 end
                   
-                if obj.rob.laser.isvalid()
-                    obj.rob.stopLaser()
+                if obj.neatoRobot.laser.isvalid()
+                    obj.neatoRobot.stopLaser()
                 end
                 
                 close(findobj('Tag','laserFig'));
@@ -148,7 +157,7 @@ classdef robot < handle
         function setLaserLogging(obj,value)
             if value
                 disp('Data logging started');
-                obj.laserLoggingListener = event.listener(obj.rob.laser,...
+                obj.laserLoggingListener = event.listener(obj.neatoRobot.laser,...
                     'OnMessageReceived',@logLaserData);
             else
                 if obj.laserLoggingListener ~= -1
@@ -161,7 +170,13 @@ classdef robot < handle
         function velocityControl(obj, v, omega)
             vr = v + obj.wheelbase / 2 * omega;
             vl = v - obj.wheelbase / 2 * omega;
-            obj.rob.sendVelocity(vl, vr); %%%%% FUCKED UP %%%%%
+            obj.neatoRobot.sendVelocity(vr, vl);
+        end
+        
+        function goToXY(obj, deltaX, deltaY, deltatheta, velocity)
+            kappa = deltatheta / sqrt(deltaX^2 + deltaY^2);
+            omega = kappa * velocity;
+            obj.velocityControl(velocity, omega);
         end
         
         function setPos(obj,x,y,theta)
@@ -177,16 +192,16 @@ classdef robot < handle
         end
         
         function close(obj)
-           
+            obj.neatoRobot.sendVelocity(0,0);
             obj.setLaserFig(false);
             obj.setLaserLogging(false);
             
             % Close robots, shutdown simulators
             if obj.useSim
-                obj.rob.shutdown();
+                obj.neatoRobot.shutdown();
                 disp('Simulator shut down.');
             else
-                obj.rob.close()
+                obj.neatoRobot.close()
                 disp('Robot Connection Closed.');
             end
             obj.robotActive = false;
@@ -197,5 +212,5 @@ classdef robot < handle
                 close(obj);
             end
         end
-    end    
+    end
 end

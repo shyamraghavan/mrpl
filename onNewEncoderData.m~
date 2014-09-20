@@ -1,8 +1,8 @@
 function onNewEncoderData(src,evt,robotClass)
     robotClass.encoders = evt.data;
-    currentTime = evt.data.header.stamp.secs + evt.data.header.stamp.nsecs*1E-9;
+    disp(evt.data.header.stamp.secs + evt.data.header.stamp.)
     
-    robotClass.prevTime = evt.data.header.stamp.secs + evt.data.header.stamp.nsecs*1E-9;
+    
     
 % if 0
 %     obj.timeStamp = evt.data.header.stamp.secs + ...
