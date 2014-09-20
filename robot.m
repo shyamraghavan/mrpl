@@ -10,16 +10,24 @@ classdef robot < handle
                                'yPos',0,...
                                'thPos',0)
         lidarData = zeros(1,360);
-        encoders = struct('leftPast',-1,...
-                          'rightPast',-1,...
-                          'timePastSec',-1,...
-                          'timePastNSec',-1);                   
+%         encoders = struct('leftPast',-1,...
+%                           'rightPast',-1,...
+%                           'timePastSec',-1,...
+%                           'timePastNSec',-1);                   
+        encoders = -1;
         mapNumber = 0;
         laserFigUpdateListener = -1;
         laserLoggingListener = -1;
         estimator = -1;
-        
         wheelbase = 0.2350;
+        
+        % The Encoder Listener
+        encListnr = -1;
+        % List of object handles for onNewEncoderData to use.
+        % onNewEncoderData will notify(Hobj,'EventName',data)
+        % Sending the new encoder data to every 
+        encoderUpdateList = [ ];
+        laserUpdateList = [ ];
      end
      
     methods 
@@ -42,12 +50,8 @@ classdef robot < handle
                 obj.useSim = false;
             end
             
-            % this lines fails because it doesnt get that im trying to
-            % shove obj into the @estimator function.
-%             obj.estimator = event.listener(obj.rob.encoders.data,...
-%                  'OnMessageReceived',{@estimator,obj});
-%             
-            
+            obj.encListnr = event.listener(obj.rob.encoders,...
+                 'OnMessageReceived',@(src,evt) onNewEncoderData(src,evt,obj));
             % Evaluate optional arguments passed to the robot.
             skip = false;
             index = -1;
@@ -118,8 +122,9 @@ classdef robot < handle
                 disp('LIDAR operational.');
                 
                 run('laserFigConfig.m');
-                obj.laserFigUpdateListener = event.listener(obj.rob.laser,...
-                 'OnMessageReceived',@onNewLaserData);
+%                 obj.laserFigUpdateListener = event.listener(obj.rob.laser,...
+%                  'OnMessageReceived',@onNewLaserData);
+                obj.laserFigUpdateListener = event.listener(obj.rob.laser,'OnMessageReceived',@(src,evt) onNewLaserData(src,evt,obj));
             else
                 if obj.laserFigUpdateListener ~= -1
                     delete(obj.laserFigUpdateListener);

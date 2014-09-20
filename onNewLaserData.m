@@ -1,10 +1,14 @@
-function onNewLaserData(~, laser)
+function onNewLaserData(src,evt,robot)
 % Updates the laser graph whenever a new batch of laser data arrives.
+laserData = evt.data;
+
+%notify(robot.laserUpdateList,'OnNewLaserData',laserData);
+
 
 laserPlotPol  = get(findobj('Tag','laserFigPol'),'Children');
 laserPlotCart = get(findobj('Tag','laserFigCart'),'Children');
 
-cleanedLaserRanges = rangeDataFilter(laser.data.ranges);
+cleanedLaserRanges = rangeDataFilter(evt.data.ranges);
 [i,r] = nearestObject(inSector(cleanedLaserRanges, -45, 45));
 
 
@@ -23,6 +27,6 @@ set(laserPlotPol(3),...
 
 set(laserPlotCart,...
     'XData',1:360,...
-	'YData',[fliplr(laser.data.ranges(1:180)),fliplr(laser.data.ranges(181:360))]);
+	'YData',[fliplr(evt.data.ranges(1:180)),fliplr(evt.data.ranges(181:360))]);
 
 end
