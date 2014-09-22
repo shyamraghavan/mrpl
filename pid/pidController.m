@@ -42,41 +42,42 @@ classdef pidController < handle
         function run(obj,targetState, error)
             print('Running');
             output = [0,0,0];
+	    % Checks for unreasonable input
             if error == 0
                 error('CANNOT HAVE ZERO ERROR.');
             end
             
+	    % Running the currentStateFunc with a true argument is required to zero out the initial values of the encoders
             obj.currentState = obj.currentStateFunc(true);
             while ~obj.epsilonFunc(targetState, error)
                 print('start')
                 print(obj);
-            	obj.currentState = obj.currentStateFunc(false);
-                if obj.type(1) == 'p'
-                    output(1) = (targetState - obj.currentState.val)*obj.kp;
-                    print(output(1));
-                end 
-                if obj.type(2) == 'i'
-                	output(2) = ((targetState - obj.currentState.val)...
-                                + obj.integralError)*obj.ki;
-                            print(output(2));
-                end
-                if obj.type(3) == 'd'
-                	if obj.previousError.time == -1
-                        obj.previousError.val = (targetState - obj.currentState.val);
-                        obj.previousError.time = obj.currentState.time;
-                        output(3) = 0;
-                    else
-                        output(3) = ...
-                        (((targetState - obj.currentState.val) - obj.previousError.val)/...
-                        (obj.currentState.time -obj.previousError.time))*obj.kd;
-                        obj.previousError.time = obj.currentState.time;
-                        obj.previousError.val  =(targetState - obj.currentState.val);
-                    end
-                    print(output(3));
-                end
-                plotDistanceError(obj.currentState, targetState);
-            	obj.pidOutFunc(sum(output))
+		% Proportional gain
+                output(1) = (targetState - obj.currentState.val)*obj.kp;
+                print(output(1));
+              	
+		% Integral Gain
+		output(2) = ((targetState - obj.currentState.val)...
+                            + obj.integralError)*obj.ki;
+                print(output(2));
                 
+		if obj.previousError.time == -1
+                    obj.previousError.val = (targetState - obj.currentState.val);
+                    obj.previousError.time = obj.currentState.time;
+                    output(3) = 0;
+                else
+                    output(3) = ...
+                    (((targetState - obj.currentState.val) - obj.previousError.val)/...
+                    (obj.currentState.time -obj.previousError.time))*obj.kd;
+                    obj.previousError.time = obj.currentState.time;
+                    obj.previousError.val  =(targetState - obj.currentState.val);
+                end
+                print(output(3));
+                
+		plotDistanceError(obj.currentState, targetState);
+            	obj.pidOutFunc(sum(output))
+           	obj.currentState = obj.currentStateFunc(false);
+
             end 
             obj.plant.velocityControl(0,0);
             obj.integralError = 0;
@@ -85,7 +86,8 @@ classdef pidController < handle
         end
         
         function currentState = currentStateFunc(obj,initial)
-            % Determines if currentState is within error of targetState
+            % Determines currentState
+	    % These persistent values tare the currentState
             persistent encoderStart encoderTime
                 if initial 
                     encoderStart = obj.plant.encoders.left+obj.plant.encoders.right;
@@ -98,10 +100,12 @@ classdef pidController < handle
         
         function valid = epsilonFunc(obj, targetState, error)
             % Determines if currentState is within error of targetState
+	    % if we are not within boundaries we short circuit the evaluation.
             if abs(obj.currentState.val - targetState)>error
                 valid = false;
                 return;
             else
+		% else we check to see if the velocity is indeed within error margin.
                 if abs(obj.plant.velocity) < 0.01
                     valid = true;
                     return
@@ -111,8 +115,7 @@ classdef pidController < handle
         end
 
         function pidOutFunc(obj, controlSig)
-            %UNTITLED10 Summary of this function goes here
-            %   Detailed explanation goes here
+            % Outputs our control signal to the robot.
             vMax = 0.2;
             ratio = 0.5;
        
