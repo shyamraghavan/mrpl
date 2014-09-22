@@ -4,7 +4,6 @@ laserData = evt.data;
 
 %notify(robot.laserUpdateList,'OnNewLaserData',laserData);
 
-if 0
 laserPlotPol  = get(findobj('Tag','laserFigPol'),'Children');
 laserPlotCart = get(findobj('Tag','laserFigCart'),'Children');
 
@@ -29,5 +28,4 @@ set(laserPlotCart,...
     'XData',1:360,...
 	'YData',[fliplr(evt.data.ranges(1:180)),fliplr(evt.data.ranges(181:360))]);
 
-end
 end

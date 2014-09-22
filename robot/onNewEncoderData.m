@@ -1,37 +1,33 @@
 function onNewEncoderData(src,evt,robotClass)
     robotClass.encoders = evt.data;
-    currentTime = evt.data.header.stamp.secs + evt.data.header.stamp.nsecs*1E-9;
     
+    robotClass.currTime = evt.data.header.stamp.secs + evt.data.header.stamp.nsecs*1E-9;
+    robotClass.currLeft = evt.data.left;
+    robotClass.currRight = evt.data.right;
+    if robotClass.prevTime ~= -1
+        robotClass.dt = robotClass.currTime - robotClass.prevTime;
+%         disp('dt ');
+%         disp(dt);
+    end
+    if robotClass.prevLeft ~= -1
+        robotClass.dLeft = robotClass.currLeft - robotClass.prevLeft;
+%         disp('dLeft ');
+%         disp(dLeft);
+    end
+    if robotClass.prevRight ~= -1
+        robotClass.dRight = robotClass.currRight - robotClass.prevRight;
+%         disp('dRight ');
+%          disp(dRight);
+    end
+    
+    robotClass.vLeft = robotClass.dLeft / robotClass.dt;
+    robotClass.vRight = robotClass.dRight / robotClass.dt;
+    % Velocity of left wheel + right wheel / 2, and then convert into
+    % meters per second.
+    robotClass.velocity = (robotClass.vLeft + robotClass.vRight) / (2 * 1000);
+%     disp(robotClass.velocity);
     robotClass.prevTime = evt.data.header.stamp.secs + evt.data.header.stamp.nsecs*1E-9;
+    robotClass.prevLeft = robotClass.currLeft;
+    robotClass.prevRight = robotClass.currRight;
     
-% if 0
-%     obj.timeStamp = evt.data.header.stamp.secs + ...
-%         (evt.data.header.stamp.nsecs/1000000000);
-%     obj.leftWheelPos = obj.neatoRobot.encoders.data.left;
-%     obj.rightWheelPos = obj.neatoRobot.encoders.data.right;
-%     
-%     if obj.prevTimeStamp ~= -1 
-%         obj.dt = obj.timeStamp - obj.prevTimeStamp;
-%     end
-%     if obj.prevLeftWheelPos ~= -1 && obj.prevRightWheelPos ~= -1
-%         obj.leftdS = obj.leftWheelPos - obj.prevLeftWheelPos;
-%         obj.leftV = obj.leftdS / obj.dt;
-%         
-%         obj.rightdS = obj.rightWheelPos - obj.prevRightWheelPos;
-%         obj.rightV = obj.rightdS / obj.dt;
-%         obj.v = (obj.rightV + obj.leftV) / 2;
-%         
-%     end
-% %     disp('LeftV')
-% %     disp(obj.leftV)
-% %     disp('RightV')
-% %     disp(obj.rightV)
-%     disp('gth');
-%     disp(src);
-%     obj.omega = (obj.rightV - obj.leftV) / 2;
-%     
-%     obj.prevTimeStamp = obj.timeStamp;
-%     obj.prevLeftWheelPos = obj.leftWheelPos;
-%     obj.prevRightWheelPos = obj.rightWheelPos;
-% end
 end

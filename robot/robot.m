@@ -16,9 +16,21 @@ classdef robot < handle
 %                           'timePastNSec',-1);                   
         % Values used by onNewEncoderData.m
         encoders = -1;
+        % In m/s
         velocity = -1;
         omega = -1;
+        currTime = -1;
         prevTime = -1;
+        currLeft = -1;
+        currRight = -1;
+        prevLeft = -1;
+        prevRight = -1;
+        % in mm/s
+        vLeft = -1;
+        vRight = -1;
+        dt = -1
+        dRight = -1;
+        dLeft = -1;
         
         
         mapNumber = 0;

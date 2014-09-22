@@ -21,7 +21,7 @@ cleanedLaserRanges = rangeDataFilter(rob.laser.data.ranges);
 % Detect nearest object within a specified sector
 [i,r] = nearestObject(inSector(cleanedLaserRanges, -45, 45));
 
-disp('Launching Error Plot.');5
+disp('Launching Error Plot.');
 % Set up error plot
 global error;
 error = [];
