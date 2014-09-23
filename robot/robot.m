@@ -171,6 +171,7 @@ classdef robot < handle
         end
         
         function velocityControl(obj, v, omega)
+            
             vr = v + obj.wheelbase / 2 * omega;
             vl = v - obj.wheelbase / 2 * omega;
             obj.rob.sendVelocity(vl, vr); %%%%% FUCKED UP %%%%%

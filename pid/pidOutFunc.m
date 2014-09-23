@@ -12,7 +12,6 @@ function pidOutFunc(pid, controlSig)
     end
 
     velocity = vMax*ratio*controlSig;
-    disp(velocity);
     pid.plant.velocityControl(velocity,0);
 end
 

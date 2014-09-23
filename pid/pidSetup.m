@@ -1,12 +1,14 @@
 %% PID Controller Setup for distance
+% Example command to start test:
+%  clear all;close all;clc; pidSetup;PID.run(1000,2)
 
-rob = robot('sim','Map',1,'Laser');
-
+rob = robot('centi');
+pause(2);
 PID = pidController(rob);
 
-setPGain(PID,5);
-setIGain(PID,0.1);
-setDGain(PID,0.1);
+setPGain(PID,1);
+setIGain(PID,0.001);
+setDGain(PID,0.4);
 global debug
 debug = true;
 disp('Launching Error Plot.');
