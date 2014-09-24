@@ -10,12 +10,8 @@ classdef robot < handle
                                'yPos',0,...
                                'thPos',0)
         lidarData = zeros(1,360);
-%         encoders = struct('leftPast',-1,...
-%                           'rightPast',-1,...
-%                           'timePastSec',-1,...
-%                           'timePastNSec',-1);                   
-        % Values used by onNewEncoderData.m
         encoders = -1;
+        
         % In m/s
         velocity = -1;
         omega = -1;
@@ -37,7 +33,6 @@ classdef robot < handle
         laserFigUpdateListener = -1;
         laserLoggingListener = -1;
         estimator = -1;
-        wheelbase = 0.2350;
         
         % The Encoder Listener
         encListnr = -1;
@@ -210,5 +205,28 @@ classdef robot < handle
                 close(obj);
             end
         end
-    end    
+    end
+    
+    properties (Constant)
+        % Wheel tread (in meters)
+        W = 0.2350;
+        % Half the Wheel tread (in meters)
+        W2 = 0.1175;
+    end
+    
+    methods(Static=true)
+        % Pass left and right wheel velocities.
+        % Return robot velocity and angle (omega)
+        function [v, w] = vlvrToVw(vl, vr)
+            v = (vr + vl) / 2;
+            w = (vr - vl) / robot.W;
+        end
+        
+        % Pass robot velocity and angle (omega)
+        % Return left and right wheel velocities.
+        function [vl, vr] = vwToVlvr(v, w)
+            vl = v - (robot.W * w) / 2;
+            vr = v + (robot.W * w) / 2;
+        end
+    end
 end
