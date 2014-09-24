@@ -5,7 +5,7 @@ function testFeedForward
     amax = 3*0.25;
     dist = 1;
 
-    r = robot('mega');
+    r = robot('sim');
     figure
     hold on;
     pause(2);
