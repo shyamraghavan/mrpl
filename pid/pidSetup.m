@@ -2,7 +2,7 @@
 % Example command to start test:
 %  clear all;close all;clc; pidSetup;PID.run(1000,2)
 
-rob = robot('centi');
+rob = robot('mega');
 pause(2);
 PID = pidController(rob);
 

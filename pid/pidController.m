@@ -11,6 +11,8 @@ classdef pidController < handle
         
         currentState = struct('val',-1,...
                               'time',-1);
+        perceivedState = struct('val',-1,...
+                              'time',-1);
         plant;
         
         % Variables required for the integral and differential error terms
@@ -105,21 +107,42 @@ classdef pidController < handle
                 amax = 3*0.25;
                 dist = targetState/1000;
 
-                figure
-                hold on;
                 initialLocation = obj.plant.encoders.left;
-
+                
+                figure(3);
+                errorPlot = subplot(2,1,1);
+                plot(errorPlot,1:10,1:10,'+m');
+                title(errorPlot,'Distance Error (m)');
+                set(errorPlot,'Tag','feedForwardErrorPlot',...
+                              'YMinorGrid', 'on');
+                ffPlot = subplot(2,1,2);
+                plot(ffPlot,1:10,1:10,'+r');
+                hold on;
+                plot(ffPlot,1:10,1:10,'+g');
+                hold off;
+                title(ffPlot,'Distance Error (m)');
+                set(ffPlot,'Tag','feedForwardPlot',...
+                              'YMinorGrid', 'on');
+                
+                
+                
                 u = trapezoidalVelocityProfile(0,amax,vmax,dist);
                 obj.plant.velocityControl(u,0);
-                scatter(0,u);
+               
                 tic
+                time = toc;
+                distanceIntegral = 0;
                 while toc < abs(dist)*4
+                    lastTime = time;
+                    time = toc;
+                    dt = time - lastTime;
                     u = trapezoidalVelocityProfile(toc,amax,vmax,dist);
                     obj.plant.velocityControl(u,0);
-                    scatter(toc,u,'+r');
-%                     disp(obj.currentState);
-                    plotDistanceError(obj.currentState, targetState);
+                    distanceIntegral = distanceIntegral + u * dt;
+                    
                     obj.currentState = obj.currentStateFunc(false);
+                    plotFeedforwardError(distanceIntegral*1000,(obj.plant.encoders.left-initialLocation))
+                    pause(0.01);
                 end
 
                 obj.plant.velocityControl(0,0);
@@ -154,7 +177,7 @@ classdef pidController < handle
                     obj.previousError.val  =(targetState - obj.currentState.val);
                 end
 %                 print(output(3));
-            fprintf('Current Error:\t%dmm\n',targetState - obj.currentState.val);    
+%             fprintf('Current Error:\t%dmm\n',targetState - obj.currentState.val);    
 %             disp(obj.currentState);
             plotDistanceError(obj.currentState, targetState);
         	obj.pidOutFunc(sum(output))
@@ -165,7 +188,11 @@ classdef pidController < handle
             obj.plant.velocityControl(0,0);
             obj.integralError = 0;
             obj.previousError.time = -1;
-            
+            global data
+            hold on;
+            plot(ffPlot,1:size(data,2),data(1,:),'+r');
+            plot(ffPlot,1:size(data,2),data(2,:),'+g');
+            hold off;
         end
         
         function currentState = currentStateFunc(obj,initial)
