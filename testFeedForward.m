@@ -1,3 +1,4 @@
+clc
 function testFeedForward
     clear all;close all;clc;
 

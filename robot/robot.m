@@ -60,23 +60,28 @@ classdef robot < handle
                 obj.robotActive = true;
             else
                 % Init neato robot.
-                try
+%                 try
                     obj.rob = neato(robName);
                     disp('Connected to Robot.');
                     obj.useSim = false;
                     
-                catch exception
-                    if strfind(exception.message,'NEED TO BE CONNECTED TO NETWORK')
-                        message = sprintf('Not connected to network %s.\nClick the OK button to use simulator instead.',robName);
-                        uiwait(msgbox(message));
-                    obj.rob = neato(obj.SIM_STR);
-                        disp('Created Simulator.');
-                        obj.useSim = true;
-                    end
-                end
+%                 catch exception
+%                     disp('gth')
+%                     if strfind(exception.message,'NEED TO BE CONNECTED TO NETWORK')
+%                         message = sprintf('Not connected to network %s.\nClick the OK button to use simulator instead.',robName);
+%                         uiwait(msgbox(message));
+%                         obj.rob = neato(obj.SIM_STR);
+%                         disp('Created Simulator.');
+%                         obj.useSim = true;
+%                     else
+%                         obj.rob = neato(robName);
+%                         disp('Connected to Robot.');
+%                         obj.useSim = false;
+%                     end
+%                 end
                 obj.robotActive = true;
             end
-            
+            pause(0.5);
             obj.encListnr = event.listener(obj.rob.encoders,...
                  'OnMessageReceived',@(src,evt) onNewEncoderData(src,evt,obj));
             % Evaluate optional arguments passed to the robot.

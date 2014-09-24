@@ -2,7 +2,8 @@ classdef pidController < handle
     properties
         % type of controler: PID, PD, PI,....
         type = 'pid';
-        
+         
+        plotting = false;
         % Gains
         kp = 0;
         ki = 0;
@@ -27,6 +28,11 @@ classdef pidController < handle
             obj.plant = plantObj;
         end       
         
+        function setPlotting(obj,valid)
+            controlFigConfig();
+            obj.plotting = valid;
+        end
+        
         %% Setters for the different gains
         function setPGain(obj,k)
             obj.kp = k;
@@ -39,9 +45,15 @@ classdef pidController < handle
         function setDGain(obj,k)
             obj.kd = k;
         end
+        
+        function setPIDGain(obj,k1,k2,k3)
+            obj.kp = k1;
+            obj.ki = k2;
+            obj.kd = k3;
+        end
               
         %% Run is the main control loop of the controller
-        function run(obj,targetState, error)
+        function runPID(obj,targetState, error)
             print('Running');
             output = [0,0,0];
 	    % Checks for unreasonable input
@@ -52,17 +64,20 @@ classdef pidController < handle
 	    % Running the currentStateFunc with a true argument is required to zero out the initial values of the encoders
             obj.currentState = obj.currentStateFunc(true);
             while ~obj.epsilonFunc(targetState, error)
-%                 print('start')
-		% Proportional gain
+                
+                % Proportional gain
                 output(1) = (targetState - obj.currentState.val)*obj.kp;
-%                 print(output(1));
-              	
-		% Integral Gain
+                
+                % Integral Gain
                 output(2) = ((targetState - obj.currentState.val)...
                             + obj.integralError)*obj.ki;
+                % Update integral error
                 obj.integralError = obj.integralError + (targetState - obj.currentState.val);
                 
-                if obj.previousError.time == -1
+                % Derivative Gain
+                if obj.previousError.time == -1 
+                    % edge case when we have no derivative gain.
+                    %update previous error
                     obj.previousError.val = (targetState - obj.currentState.val);
                     obj.previousError.time = obj.currentState.time;
                     output(3) = 0;
@@ -70,19 +85,27 @@ classdef pidController < handle
                     output(3) = ...
                     (((targetState - obj.currentState.val) - obj.previousError.val)/...
                     (obj.currentState.time -obj.previousError.time))*obj.kd;
+                    %update previous error
                     obj.previousError.time = obj.currentState.time;
                     obj.previousError.val  =(targetState - obj.currentState.val);
                 end
-%                 print(output(3));
-            fprintf('Current Error:\t%dmm\n',targetState - obj.currentState.val);    
-            plotDistanceError(obj.currentState, targetState);
-            disp(output);
-        	obj.pidOutFunc(sum(output))
-           	obj.currentState = obj.currentStateFunc(false);
 
+                print('Current Error:\t%dmm\n',targetState - obj.currentState.val);    
+                if obj.plotting
+                    plotDistanceError(obj.currentState.val, targetState);
+                end
+                
+                %creates control signal and gives it to pidOutFunc for
+                %actual output.
+                obj.pidOutFunc(sum(output),0)
+                %update current state
+                obj.currentState = obj.currentStateFunc(false);
             end 
+            
             print('DONE');
+            % stops robot
             obj.plant.velocityControl(0,0);
+            %reset errors
             obj.integralError = 0;
             obj.previousError.time = -1;
             
@@ -91,108 +114,66 @@ classdef pidController < handle
         %% Run with Feed Forward
         function runFF(obj,targetState, error)
             print('Running');
-            output = [0,0,0];            
-    
-	    % Running the currentStateFunc with a true argument is required to zero out the initial values of the encoders
-            obj.currentState = obj.currentStateFunc(true);
-            
+            output = [0,0,0];
             
 	    % Checks for unreasonable input
             if error == 0
                 error('CANNOT HAVE ZERO ERROR.');
-            end
+            end    
+	    % Running the currentStateFunc with a true argument is required to zero out the initial values of the encoders
+            vmax = 0.25;
+            amax = 3*0.25;
+            dist = targetState/1000;
+            vFF = trapezoidalVelocityProfile(0,amax,vmax,dist);
             
-            if 1
-                vmax = 0.25;
-                amax = 3*0.25;
-                dist = targetState/1000;
+            obj.currentState = obj.currentStateFunc(true);
+            obj.plant.velocityControl(vFF,0);
 
-                initialLocation = obj.plant.encoders.left;
-                
-                figure(3);
-                errorPlot = subplot(2,1,1);
-                plot(errorPlot,1:10,1:10,'+m');
-                title(errorPlot,'Distance Error (m)');
-                set(errorPlot,'Tag','feedForwardErrorPlot',...
-                              'YMinorGrid', 'on');
-                ffPlot = subplot(2,1,2);
-                plot(ffPlot,1:10,1:10,'+r');
-                hold on;
-                plot(ffPlot,1:10,1:10,'+g');
-                hold off;
-                title(ffPlot,'Distance Error (m)');
-                set(ffPlot,'Tag','feedForwardPlot',...
-                              'YMinorGrid', 'on');
-                
-                
-                
-                u = trapezoidalVelocityProfile(0,amax,vmax,dist);
-                obj.plant.velocityControl(u,0);
-               
-                tic
-                time = toc;
-                distanceIntegral = 0;
-                while toc < abs(dist)*4
-                    lastTime = time;
-                    time = toc;
-                    dt = time - lastTime;
-                    u = trapezoidalVelocityProfile(toc,amax,vmax,dist);
-                    obj.plant.velocityControl(u,0);
-                    distanceIntegral = distanceIntegral + u * dt;
-                    
-                    obj.currentState = obj.currentStateFunc(false);
-                    plotFeedforwardError(distanceIntegral*1000,(obj.plant.encoders.left-initialLocation))
-                    pause(0.01);
-                end
-
-                obj.plant.velocityControl(0,0);
-
-                fprintf('Wheel movement Feed Fwd: %dmm\n',obj.plant.encoders.left - initialLocation);
-                
-%                 targetState = obj.plant.encoders.left - initialLocation - targetState;
-                fprintf('New Target State: %dmm\n',targetState);
-            end
-            
-            
+            time = tic; % start time for integrator
+            expectedDist = 0; %expected displacement
             while ~obj.epsilonFunc(targetState, error)
-%                 print('start')
-		% Proportional gain
-                output(1) = (targetState - obj.currentState.val)*obj.kp;
-%                 print(output(1));
-              	
-		% Integral Gain
-                output(2) = ((targetState - obj.currentState.val)...
-                            + obj.integralError)*obj.ki;
-                obj.integralError = obj.integralError + (targetState - obj.currentState.val);
                 
-                if obj.previousError.time == -1
-                    obj.previousError.val = (targetState - obj.currentState.val);
-                    obj.previousError.time = obj.currentState.time;
-                    output(3) = 0;
-                else
-                    output(3) = ...
-                    (((targetState - obj.currentState.val) - obj.previousError.val)/...
-                    (obj.currentState.time -obj.previousError.time))*obj.kd;
-                    obj.previousError.time = obj.currentState.time;
-                    obj.previousError.val  =(targetState - obj.currentState.val);
-                end
-%                 print(output(3));
-%             fprintf('Current Error:\t%dmm\n',targetState - obj.currentState.val);    
-%             disp(obj.currentState);
-            plotDistanceError(obj.currentState, targetState);
-        	obj.pidOutFunc(sum(output))
-           	obj.currentState = obj.currentStateFunc(false);
+                lastTime = time;
+                currentTime = toc(time);
+                dt = currentTime - lastTime;
+                
+                % current velocity value acording to our profile
+                vFF = trapezoidalVelocityProfile(currentTime,amax,vmax,dist);
+                
+                if ~obj.epsilonFunc(expectedDist,error)
+                    % Proportional gain
+                    output(1) = (targetState - obj.currentState.val)*obj.kp;
 
-            end 
+                    % Integral Gain
+                    output(2) = ((targetState - obj.currentState.val)...
+                                + obj.integralError)*obj.ki;
+                    obj.integralError = obj.integralError + (targetState - obj.currentState.val);
+
+                    % Derivative Gain
+                    if obj.previousError.time == -1
+                        obj.previousError.val = (targetState - obj.currentState.val);
+                        obj.previousError.time = obj.currentState.time;
+                        output(3) = 0;
+                    else
+                        output(3) = ...
+                        (((targetState - obj.currentState.val) - obj.previousError.val)/...
+                        (obj.currentState.time -obj.previousError.time))*obj.kd;
+                        obj.previousError.time = obj.currentState.time;
+                        obj.previousError.val  =(targetState - obj.currentState.val);
+                    end
+                end
+                
+                expectedDist = expectedDist + vFF * dt;
+                obj.pidOutFunc(sum(output),vFF);
+                if obj.plotting
+                    plotFeedforwardError(expectedDist*1000,obj.currentState.val)
+                end
+                pause(0.01);
+            end
             print('DONE');
             obj.plant.velocityControl(0,0);
             obj.integralError = 0;
             obj.previousError.time = -1;
-            global data
-            hold on;
-            plot(ffPlot,1:size(data,2),data(1,:),'+r');
-            plot(ffPlot,1:size(data,2),data(2,:),'+g');
-            hold off;
         end
         
         function currentState = currentStateFunc(obj,initial)
@@ -224,15 +205,16 @@ classdef pidController < handle
             end
         end
         
-        function pidOutFunc(obj, controlSig)
+        function pidOutFunc(obj, controlSig,velocity)
             % Outputs our control signal to the robot.       
-            velocity = controlSig*0.001;
-            if velocity > 0.3
+            trim = controlSig*0.001;
+            if velocity+trim > 0.3
                 velocity = 0.3;
-            elseif velocity <-0.3
+            elseif velocity+trim <-0.3
                 velocity = -0.3;
+            else
+                velocity = velocity+trim;
             end
-            global error;
             obj.plant.velocityControl(velocity,0);
             pause(0.5);
         end
