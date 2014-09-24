@@ -50,17 +50,31 @@ classdef robot < handle
             global robot; 
             robot = obj;
             
-            % Init neato robot.
-            obj.rob = neato(robName);
-            obj.robotActive = true;
             
             % Check if rob is a robot or a simulator
             if strcmp(robName,obj.SIM_STR)
                 disp('Created Simulator.');
                 obj.useSim = true;
+                % Init neato robot.
+                obj.rob = neato(robName);
+                obj.robotActive = true;
             else
-                disp('Connected to Robot.');
-                obj.useSim = false;
+                % Init neato robot.
+                try
+                    obj.rob = neato(robName);
+                    disp('Connected to Robot.');
+                    obj.useSim = false;
+                    
+                catch exception
+                    if strfind(exception.message,'NEED TO BE CONNECTED TO NETWORK')
+                        message = sprintf('Not connected to network %s.\nClick the OK button to use simulator instead.',robName);
+                        uiwait(msgbox(message));
+                    obj.rob = neato(obj.SIM_STR);
+                        disp('Created Simulator.');
+                        obj.useSim = true;
+                    end
+                end
+                obj.robotActive = true;
             end
             
             obj.encListnr = event.listener(obj.rob.encoders,...
@@ -167,8 +181,8 @@ classdef robot < handle
         
         function velocityControl(obj, v, omega)
             
-            vr = v + obj.wheelbase / 2 * omega;
-            vl = v - obj.wheelbase / 2 * omega;
+            vr = v + robot.W2 * omega;
+            vl = v - obj.W2 * omega;
             obj.rob.sendVelocity(vl, vr); %%%%% FUCKED UP %%%%%
         end
         
