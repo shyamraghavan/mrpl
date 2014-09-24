@@ -6,7 +6,7 @@ function testFeedForward
     dist = 1;
 
     r = robot('sim');
-    figure
+%     figure
     hold on;
     pause(2);
     initialLocation = r.encoders.left;
