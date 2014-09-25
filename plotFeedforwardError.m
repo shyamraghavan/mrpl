@@ -1,14 +1,14 @@
-function plotFeedforwardError(currentR,targetR)
+function plotFeedforwardError(currentR,targetR,error)
 % Plots the error on he distance between a target disance and a current
 % distance.
 global data;
 
-if size(data, 2) < 250
-    data = [data [currentR;targetR;(currentR-targetR)]];
+if size(data, 2) < 1000
+    data = [data [currentR;targetR;error;0;0]];
     
 else
     data(:,1:end-1) = data(:,2:end);
-    data(:,end) = [currentR;targetR;currentR-targetR]; 
+    data(:,end) = [currentR;targetR;error;0;0]; 
 end
 
 set(get(findobj('Tag','feedForwardErrorPlot'),'Children'),...

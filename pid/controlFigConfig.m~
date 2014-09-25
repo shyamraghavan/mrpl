@@ -18,8 +18,8 @@ function controlFigConfig()
     
     vPlot = subplot(3,1,3);
     hold on;
-    vffPlot = plot(vPlot,1:10,1:10,'.k');
-    velPlot = plot(vPlot,1:10,10:-1:1,'.b');
+    vffPlot = plot(vPlot,1:10,1:10,'+r');
+    velPlot = plot(vPlot,1:10,10:-1:1,'+g');
     hold off;
     title(vPlot,'Distance Error (m)');
     set(vffPlot,'Tag','vffPlot');

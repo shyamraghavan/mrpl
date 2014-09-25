@@ -230,17 +230,17 @@ classdef pidController < handle
             end
             
             trim = controlSig*0.001;
-            if velocity+trim > 300
-                velocity = 300;
-            elseif velocity+trim < -300
-                velocity = -300;
+            if velocity+trim > 0.3
+                velocity = 0.3;
+            elseif velocity+trim < -0.3
+                velocity = -0.3;
             else
                 velocity = velocity+trim;
             end
             plotOutput(vff,velocity);
-            fprintf('%d | %d | %d\n',vff,velocity,trim);
+            fprintf('%d | %d\n',velocity,trim);
 %             fprintf('trim: %d \n VFF: %s \n  actuatedVel: %d \n xxxxxxxxxxxxxx',trim,vff,velocity);
-            obj.plant.velocityControl(velocity/1000,0);
+            obj.plant.velocityControl(velocity,0);
         end
     end
 end

@@ -7,9 +7,11 @@ rob = robot('giga');
 pause(2);
 PID = pidController(rob);
 
-PID.setPGain(PID,1);
-PID.setIGain(PID,0.001);
-PID.setDGain(PID,0.4);
+setPGain(PID,1);
+setIGain(PID,0);
+setDGain(PID,0);
 PID.setPlotting(true);
-global debug
+global debug max min
 debug = true;
+max = 0;
+min = 0;
