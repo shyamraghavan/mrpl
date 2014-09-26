@@ -179,14 +179,24 @@ classdef pidController < handle
         function currentState = currentStateFunc(obj,initial)
             % Determines currentState
 	    % These persistent values tare the currentState
-            persistent encoderStart encoderTime
+            persistent encoderStart
                 if initial 
-                    encoderStart = obj.plant.encoders.left+obj.plant.encoders.right;
-                    encoderTime = obj.plant.encoders.header.stamp.secs+obj.plant.encoders.header.stamp.nsecs*1E-9;
+                    encoderStart = obj.plant.currLeft + obj.plant.currRight;
+                    
+                    currentState.time = obj.plant.currTime;
+                    currentState.x = 0;
+                    currentState.y = 0;
+                    currentState.theta = 0;
                 end
-                currentState.val = 0.5*(obj.plant.encoders.left+obj.plant.encoders.right - encoderStart);
-                currentState.time = (obj.plant.encoders.header.stamp.secs+obj.plant.encoders.header.stamp.nsecs*1E-9)...
-                                    - encoderTime;
+                currentState.lastTime = obj.currentState.time;
+                currentState.time = obj.plant.currentTime;
+                currentState.lastS = obj.currentState.S;
+                currentState.S = 0.5*(obj.plant.currLeft + obj.plant.currRight - encoderStart);
+                currentState.v = obj.plant.velocity * 1000;
+                currentState.omega = obj.plant.omega * 1000;
+                currentState.theta = obj.currentState.theta + obj.currentState.omega * (obj.currentState.lastTime - obj.currentState.time);
+                currentState.x = obj.currentState.x + obj.currentState.v * cos(obj.currentState.theta) * (obj.currentState.lastTime - obj.currentState.time);
+                currentState.y = obj.currentState.y + obj.currentState.v * sin(obj.currentState.theta) * (obj.currentState.lastTime - obj.currentState.time);
         end
         
         function valid = epsilonFunc(obj,type, targetState, error)
