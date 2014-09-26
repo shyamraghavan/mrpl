@@ -190,10 +190,9 @@ classdef pidController < handle
                 end
                 currentState.lastTime = obj.currentState.time;
                 currentState.time = obj.plant.currentTime;
-                currentState.lastS = obj.currentState.S;
-                currentState.S = 0.5*(obj.plant.currLeft + obj.plant.currRight - encoderStart);
                 currentState.v = obj.plant.velocity * 1000;
                 currentState.omega = obj.plant.omega * 1000;
+                currentState.S = 0.5*(obj.plant.currLeft + obj.plant.currRight - encoderStart);
                 currentState.theta = obj.currentState.theta + obj.currentState.omega * (obj.currentState.lastTime - obj.currentState.time);
                 currentState.x = obj.currentState.x + obj.currentState.v * cos(obj.currentState.theta) * (obj.currentState.lastTime - obj.currentState.time);
                 currentState.y = obj.currentState.y + obj.currentState.v * sin(obj.currentState.theta) * (obj.currentState.lastTime - obj.currentState.time);
