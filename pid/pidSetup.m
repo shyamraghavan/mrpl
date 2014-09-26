@@ -3,7 +3,7 @@
 %  clear all;close all;clc; pidSetup;PID.run(1000,2)
 
 % rob = robot('sim','Map',1,'Laser');
-rob = robot('giga');
+rob = robot('milli');
 pause(2);
 PID = pidController(rob);
 

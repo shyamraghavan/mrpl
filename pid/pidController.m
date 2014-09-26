@@ -163,13 +163,11 @@ classdef pidController < handle
                     plotFeedforwardError(expectedDist,obj.currentState.val,error.val);
                 end
                 expectedDist = expectedDist + vFF * dt;
+                fprintf('%d | %d | %d | %d || %d || %d\n',error.val,output(1),output(2),output(3),obj.integralError,dt);
                 obj.pidOutFunc(sum(output),vFF);
 
                 obj.currentState = obj.currentStateFunc(false);
-%                 fprintf('expDist: %d\n currentVal: %d\n vFF: %d\n dt:%d\n',expectedDist,obj.currentState.val,vFF,dt);
-                
-               
-                pause(0.01);
+                pause(0.05);
               
             end
             print('DONE');
@@ -238,7 +236,7 @@ classdef pidController < handle
                 velocity = velocity+trim;
             end
             plotOutput(vff,velocity);
-            fprintf('%d | %d | %d\n',vff,velocity,trim);
+%             fprintf('%d | %d | %d\n',vff,velocity,trim);
 %             fprintf('trim: %d \n VFF: %s \n  actuatedVel: %d \n xxxxxxxxxxxxxx',trim,vff,velocity);
             obj.plant.velocityControl(velocity/1000,0);
         end

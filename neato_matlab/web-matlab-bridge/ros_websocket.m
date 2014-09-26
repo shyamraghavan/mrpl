@@ -80,13 +80,13 @@ classdef ros_websocket < handle
             % Create ROSBridgeClient object
             % obj.client = javaObjectMT('org.java_websocket.bridge.ROSBridgeClient',obj.MASTER_URI);
             obj.client = ROSBridgeClient(obj.MASTER_URI);
-            obj.client = handle(obj.client, 'CallbackProperties');
+	    obj.client = handle(obj.client,'CallbackProperties');
             
             % Connect to websocket
             retry = 0;
             while (not(strcmp(obj.client.getReadyState(),'OPEN')) && retry <= 3)
                 obj.client.connect()
-                pause(0.10)
+                pause(1)
                 retry = retry + 1;
             end
             

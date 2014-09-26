@@ -1,5 +1,5 @@
 %% Initialize.
-run initLocal.m;
+run ../initLocal.m;
 close all; clc;
 
 %% Setup world.

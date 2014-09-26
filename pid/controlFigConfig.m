@@ -23,5 +23,5 @@ function controlFigConfig()
     hold off;
     title(vPlot,'Distance Error (m)');
     set(vffPlot,'Tag','vffPlot');
-    set(velPlot,'Tag','feedForwardPlot2');
+    set(velPlot,'Tag','velPlot');
 end
