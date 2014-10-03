@@ -28,11 +28,11 @@ classdef ReferenceControl < handle
             % calculates the trajectory
             obj.t = 0:0.1:tMax;
             obj.v = 0.3*Kv.*ones(1,length(obj.t));
-            obj.w = (Kv/Ks).*sin((obj.t.*Kv)./2*Ks);
+            obj.w = (Kv/Ks).*sin((obj.t.*Kv)./2*Ks)/(1.2*pi);
             
             %zeroes out the velocities during the leading and tailing
             %pauses.
-            obj.t = [0 tPause obj.t+tPause obj.t(end)+tPause tMax+2*tPause];
+            obj.t = [0 tPause-0.001 obj.t+tPause obj.t(end)+tPause-0.001 tMax+2*tPause];
             obj.v = [0 0 obj.v 0 0];
             obj.w = [0 0 obj.w 0 0];
         end

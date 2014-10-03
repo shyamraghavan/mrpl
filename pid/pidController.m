@@ -28,6 +28,11 @@ classdef pidController < handle
                                'time',-1);
         %proportional gain the first time around the loop?
         integralError=0;
+        
+        linVel=0;
+        angVel=0;
+        
+        refControl;
     end
     methods
         %% Constructor
@@ -119,37 +124,51 @@ classdef pidController < handle
         end
         
         %% Run with Feed Forward
-        function runFF(obj,targetState, margin)
+        function runFF(obj, margin)
             print('Running');
             output = [0,0,0];
+            
+            obj.refControl = ReferenceControl();
+            obj.refControl.figure8(0.5,0.5,1.5);
             
 	    % Checks for unreasonable input
             if margin == 0
                 margin('CANNOT HAVE ZERO ERROR.');
             end    
-	    % Running the currentStateFunc with a true argument is required to zero out the initial values of the encoders
-            vmax = 150;%mm
-            amax = 200;%mm
-            dist = targetState;%mm
-            vFF = trapezoidalVelocityProfile(0,amax,vmax,dist);
             
+            vFF = [0 0];
             obj.currentState = obj.currentStateFunc(true);
-            obj.plant.velocityControl(vFF,0);
+            obj.plant.velocityControl(vFF(1),vFF(2));
 
             time = tic; % start time for integrator
             lastTime = toc(time);
-            expectedDist = 0; %expected displacement
-            while ~obj.epsilonFunc('pid',targetState, margin)
+            expected.x = -1;
+            expected.y = -1;
+            while ~obj.epsilonFunc('pid', expected, margin)
 
                 currentTime = toc(time);
                 dt = currentTime - lastTime;
                 lastTime = currentTime;
 
                 % current velocity value acording to our profile
-                vFF = trapezoidalVelocityProfile(currentTime,amax,vmax,dist);
-                error.val = expectedDist - obj.currentState.val;
-                error.time= obj.currentState.time;
-
+                currentTime
+                vFF = obj.refControl.computeControl(currentTime);
+                if initial
+                    expected.time = obj.plant.currTime;
+                    expected.x = 0;
+                    expected.y = 0;
+                    expected.theta = 0;
+                end
+                expected.lastTime = expected.time;
+                expected.time = obj.plant.currTime;
+                expected.v = obj.linVel * 1000;
+                expected.omega = obj.angVel * 1000;
+                expected.theta = expected.theta + expected.omega * (expected.lastTime - expected.time);
+                expected.x = expected.x + expected.v * cos(expected.theta) * (expected.lastTime - expected.time);
+                expected.y = expected.y + expected.v * sin(expected.theta) * (expected.lastTime - expected.time);
+                
+                error.val = sqrt((expected.y - obj.currentState.y)^2 + (expected.x - obj.currentState.x)^2);
+                
                 % Proportional gain
                 output(1) = error.val*obj.kp;
 
@@ -169,7 +188,7 @@ classdef pidController < handle
                 if obj.plotting
                     plotFeedforwardError(expectedDist,obj.currentState.val,error.val);
                 end
-                expectedDist = expectedDist + vFF * dt;
+                expectedDist = expectedDist + vFF(1) * dt;
                 fprintf('%d | %d | %d | %d || %d || %d\n',error.val,output(1),output(2),output(3),obj.integralError,dt);
                 obj.pidOutFunc(sum(output),vFF);
 
@@ -196,7 +215,7 @@ classdef pidController < handle
                     currentState.theta = 0;
                 end
                 currentState.lastTime = obj.currentState.time;
-                currentState.time = obj.plant.currentTime;
+                currentState.time = obj.plant.currTime;
                 currentState.v = obj.plant.velocity * 1000;
                 currentState.omega = obj.plant.omega * 1000;
                 currentState.S = 0.5*(obj.plant.currLeft + obj.plant.currRight - encoderStart);
@@ -205,11 +224,18 @@ classdef pidController < handle
                 currentState.y = obj.currentState.y + obj.currentState.v * sin(obj.currentState.theta) * (obj.currentState.lastTime - obj.currentState.time);
         end
         
-        function valid = epsilonFunc(obj,type, targetState, error)
+        function valid = epsilonFunc(obj,type, expected, maxError)
+            
+            if expected.x == -1 && expected.y == -1
+                valid = false;
+                return
+            end
             % Determines if currentState is within error of targetState
+            
             if strcmp(type,'pid')
             % if we are not within boundaries we short circuit the evaluation.
-                if abs(obj.currentState.val - targetState)>error
+                currError = sqrt((expected.y - obj.currentState.y)^2 + (expected.x - obj.currentState.x)^2);
+                if currError > maxError 
                     valid = false;
                     return;
                 else
@@ -220,13 +246,6 @@ classdef pidController < handle
                     end
                     valid = false;
                 end
-            elseif strcmp(type,'ff')
-                if abs(obj.currentState.val - targetState)>error
-                    valid = false;
-                    return;
-                end
-                valid = true;
-                return;
             else
                 error('WRONG TYPE FOR EPSILONFUNC.');
             end
@@ -235,6 +254,8 @@ classdef pidController < handle
         function pidOutFunc(obj, controlSig,velocity)
             % Outputs our control signal to the robot.       
             global max min
+            linVel = velocity(1);
+            angVel = velocity(2);
             vff = velocity;
             if controlSig > max 
                 max = controlSig;
@@ -244,17 +265,30 @@ classdef pidController < handle
             end
             
             trim = controlSig*0.001;
-            if velocity+trim > 300
-                velocity = 300;
-            elseif velocity+trim < -300
-                velocity = -300;
+            if linVel+trim > 300
+                linVel = 300;
+            elseif linVel+trim < -300
+                linVel = -300;
             else
-                velocity = velocity+trim;
+                linVel = linVel+trim;
             end
-            plotOutput(vff,velocity);
+            
+            angVelMax = (300 - linVel)*2/0.2350;
+            
+            if angVel+trim > angVelMax
+                angVel = 300;
+            elseif angVel+trim < -angVelMax
+                angVel = -300;
+            else
+                angVel = angVel+trim;
+            end
+            plotOutput(vff,linVel);
 %             fprintf('%d | %d | %d\n',vff,velocity,trim);
 %             fprintf('trim: %d \n VFF: %s \n  actuatedVel: %d \n xxxxxxxxxxxxxx',trim,vff,velocity);
-            obj.plant.velocityControl(velocity/1000,0);
+            obj.plant.velocityControl(linVel/1000,angVel/1000);
+            
+            obj.linVel = linVel;
+            obj.angVel = angVel;
         end
     end
 end

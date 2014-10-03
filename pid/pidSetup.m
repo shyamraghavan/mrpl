@@ -2,8 +2,8 @@
 % Example command to start test:
 %  clear all;close all;clc; pidSetup;PID.run(1000,2)
 
-% rob = robot('sim','Map',1,'Laser');
-rob = robot('milli');
+rob = robot('sim','Map',1,'Laser');
+%rob = robot('milli');
 pause(2);
 PID = pidController(rob);
 
