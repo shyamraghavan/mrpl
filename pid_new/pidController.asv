@@ -77,18 +77,16 @@ classdef pidController < handle
         end
         
         % Feedforward
-        function runFF(obj, cubicSpiral, margin)
-           
-            % Checks that the reference control was initialized.
-            if ~isa(cubicSpiral,'cubicSpiral')
-                error('Invalid Reference to cubicSpiral object.')
-            end
+        function runFF(obj, goalPose, sgn, margin)
             % Checks for unreasonable input
             if margin == 0
                 margin('CANNOT HAVE ZERO ERROR.');
             end 
             
-            while ~withinMargin(
+            curve = cubicSpiral.planTrajectory(goalPose(1),goalPose(2),goalPose(3),sgn);
+            curve.planVelocities(0.25);%Vmax minus some wiggle room for the controller.
+            
+            while (currTime <= curve.getTrajectoryDuration) || ~withinMargin(curve.getTrajectoryDistance
             end
         end
         

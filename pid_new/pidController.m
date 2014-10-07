@@ -77,16 +77,22 @@ classdef pidController < handle
         end
         
         % Feedforward
-        function runFF(obj, goalPose, margin)
+        function runFF(obj, goalPose, sgn, margin)
             % Checks for unreasonable input
             if margin == 0
                 margin('CANNOT HAVE ZERO ERROR.');
             end 
             
+            curve = cubicSpiral.planTrajectory(goalPose(1),goalPose(2),goalPose(3),sgn);
+            curve.planVelocities(0.25);%Vmax minus some wiggle room for the controller.
             
-            
-            
-            while ~withinMargin(
+            while (currentState.time <= curve.getTrajectoryDuration) ||...
+                    ~withinMargin(curve.getTrajectoryDistance,currentState.dist, margin)
+                %
+                %
+                % stuff
+                %
+                %
             end
         end
         
