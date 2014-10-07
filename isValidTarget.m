@@ -6,7 +6,7 @@ function [w, valid] = isValidTarget(x, y, v)
     vMax = 0.3;
     W = 0.230;
 
-    wMax = (vMax-v)*2/W
+    wMax = (vMax-v)*2/W;
 
     bearing = atan(y/x);
     halfDist =0.5*sqrt(x^2+y^2);
